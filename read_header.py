@@ -36,7 +36,6 @@ if bootloader_md5 != "166162c6c9f21d7a710dfd62a3452684":
 else:
 	print "Bootloader md5 matches, this parser will probably work!"
 
-
 # This data comes from the "W90P710 Bootloader Users Manual" (find it yourself, I'm not allowed to distribute it)
 #
 # I'm not terribly happy with this.  We're reading through a file, looking for the pattern that identifies a block of data.
@@ -59,6 +58,15 @@ for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",
 	if type & IMAGE_COMPRESSED:
 		flag_desc.append('compressed')
 
-	print "Image: %i Name: %s Base: 0x%x Length: 0x%x (%i) Load: 0x%x Exec: 0x%x Image Checksum: 0x%x Signature: 0x%x Type: %s (0x%x) Footer Checksum: 0x%x" % (imagenum, name, base_addr, length, length, load_address, exec_address, image_checksum, signature, ', '.join(flag_desc), type, footer_checksum)
+	print "\nImage: %i Name: %s Base: 0x%x Length: 0x%x (%i) Load: 0x%x Exec: 0x%x Image Checksum: 0x%x Signature: 0x%x Type: %s (0x%x) Footer Checksum: 0x%x" % (imagenum, name, base_addr, length, length, load_address, exec_address, image_checksum, signature, ', '.join(flag_desc), type, footer_checksum)
 
+	imagestart = base_addr
+	if base_addr > 0x40000000:
+		# I'm unsure where this 0x40000000 byte offset is coming from.  Perhaps I'm not parsing the footer correctly?
+		imagestart -= 0x40000000
 
+	imageend = imagestart + length
+
+	print "Dumping 0x%s to 0x%s to %s.bin" % (imagestart, imageend, name)
+	with open('%s.bin' % name.replace("\x00",""),'w') as f:
+		f.write(ipmifw[imagestart:imageend])
