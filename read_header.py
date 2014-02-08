@@ -78,6 +78,17 @@ for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",
 
 	print "\nImage: %i Name: %s Base: 0x%x Length: 0x%x (%i) Load: 0x%x Exec: 0x%x Image Checksum: 0x%x Signature: 0x%x Type: %s (0x%x) Footer Checksum: 0x%x" % (imagenum, name, base_addr, length, length, load_address, exec_address, image_checksum, signature, ', '.join(flag_desc), type, footer_checksum)
 
+
+	# The footer checksum is only the 48 bytes of actual data (excludes the \xff padding, and the checksum itself)
+	computed_footer_checksum = computeChecksum(header[:-4])
+	if computed_footer_checksum != footer_checksum:
+		print "Warning: Footer checksum mismatch, footer: 0x%x, computed 0x%x" % (footer_checksum,computed_footer_checksum)
+	else:
+		print "Footer checksum matches"
+
+	
+
+
 	imagestart = base_addr
 	if base_addr > 0x40000000:
 		# I'm unsure where this 0x40000000 byte offset is coming from.  Perhaps I'm not parsing the footer correctly?
@@ -88,9 +99,9 @@ for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",
 	print "Dumping 0x%s to 0x%s to %s.bin" % (imagestart, imageend, name)
 	with open('%s.bin' % name.replace("\x00",""),'w') as f:
 		f.write(ipmifw[imagestart:imageend])
-		computed = computeChecksum(ipmifw[imagestart:imageend])
+		computed_image_checksum = computeChecksum(ipmifw[imagestart:imageend])
 
-		if computed != image_checksum:
-			print "Warning: Image checksum didn't match, footer: 0x%x computed: 0x%x" % (image_checksum,computed)
+		if computed_image_checksum != image_checksum:
+			print "Warning: Image checksum mismatch, footer: 0x%x computed: 0x%x" % (image_checksum,computed_image_checksum)
 		else:
-			print "Checksum matches!"
+			print "Image checksum matches"
