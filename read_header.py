@@ -1,10 +1,24 @@
+#!/usr/local/bin/python2.7
 
-import re, hashlib, os
+import re, hashlib, os, io
+from ConfigParser import ConfigParser
 from ipmifw.FirmwareImage import FirmwareImage
 
 
+default_ini = """
+[flash]
+total_size=0
+
+[images]
+"""
+
+config = ConfigParser()
+config.readfp(io.BytesIO(default_ini))
+
 with open('SMT_313.bin','r') as f:
 	ipmifw = f.read()
+
+config.set('flash', 'total_size', len(ipmifw))
 
 try:
 	os.mkdir('data')
@@ -37,8 +51,8 @@ for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",
 
 	print "\n"+str(fi)
 
-	imagestart = fi.base_addr
-	if fi.base_addr > 0x40000000:
+	imagestart = fi.base_address
+	if imagestart > 0x40000000:
 		# I'm unsure where this 0x40000000 byte offset is coming from.  Perhaps I'm not parsing the footer correctly?
 		imagestart -= 0x40000000
 
@@ -53,3 +67,17 @@ for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",
 			print "Warning: Image checksum mismatch, footer: 0x%x computed: 0x%x" % (fi.image_checksum,computed_image_checksum)
 		else:
 			print "Image checksum matches"
+
+
+	config.set('images', str(fi.imagenum), 'present')
+	configkey = 'image_%i' % fi.imagenum
+	config.add_section(configkey)
+	config.set(configkey, 'length', hex(fi.length))
+	config.set(configkey, 'base_addr', hex(fi.base_address))
+	config.set(configkey, 'load_addr', hex(fi.load_address))
+	config.set(configkey, 'exec_addr', hex(fi.exec_address))
+	config.set(configkey, 'name', fi.name)
+	config.set(configkey, 'type', hex(fi.type))
+
+with open('data/image.ini','w') as f:
+	config.write(f)

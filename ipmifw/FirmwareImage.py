@@ -35,7 +35,7 @@ class FirmwareImage:
 
 	def __init__(self):
 		self.imagenum = 0
-		self.base_addr = 0
+		self.base_address = 0
 		self.length = 0
 		self.load_address = 0
 		self.exec_address = 0
@@ -46,11 +46,12 @@ class FirmwareImage:
 		self.footer_checksum = 0
 		
 	def loadFromString(self,footer): 
-		(self.imagenum, self.base_addr, self.length, self.load_address, self.exec_address, self.name, self.image_checksum, self.signature, self.type, self.footer_checksum) = struct.unpack(FirmwareImage.footer_format,footer)
+		(self.imagenum, self.base_address, self.length, self.load_address, self.exec_address, self.name, self.image_checksum, self.signature, self.type, self.footer_checksum) = struct.unpack(FirmwareImage.footer_format,footer)
+		self.name = self.name.replace("\x00","")
 
 	# The footer checksum is only the 48 bytes of actual data (excludes the \xff padding, and the checksum itself)
 	def computeFooterChecksum(self):
-		footer_data = struct.pack("<5I16s3I",self.imagenum, self.base_addr, self.length, self.load_address, self.exec_address, self.name, self.image_checksum, self.signature, self.type)
+		footer_data = struct.pack("<5I16s3I",self.imagenum, self.base_address, self.length, self.load_address, self.exec_address, self.name, self.image_checksum, self.signature, self.type)
 		return FirmwareImage.computeChecksum(footer_data)
 
 
@@ -67,7 +68,7 @@ class FirmwareImage:
 	        if self.type & FirmwareImage.IMAGE_COMPRESSED:
        	        	flag_desc.append('compressed')
 
-		description = "Firmware image: %i Name: %s Base: 0x%x Length: 0x%x (%i) Load: 0x%x Exec: 0x%x Image Checksum: 0x%x Signature: 0x%x Type: %s (0x%x) Footer Checksum: 0x%x" % (self.imagenum, self.name, self.base_addr, self.length, self.length, self.load_address, self.exec_address, self.image_checksum, self.signature, ', '.join(flag_desc), self.type, self.footer_checksum)
+		description = "Firmware image: %i Name: %s Base: 0x%x Length: 0x%x (%i) Load: 0x%x Exec: 0x%x Image Checksum: 0x%x Signature: 0x%x Type: %s (0x%x) Footer Checksum: 0x%x" % (self.imagenum, self.name, self.base_address, self.length, self.length, self.load_address, self.exec_address, self.image_checksum, self.signature, ', '.join(flag_desc), self.type, self.footer_checksum)
 
 		computed_footer_checksum = self.computeFooterChecksum()
 
