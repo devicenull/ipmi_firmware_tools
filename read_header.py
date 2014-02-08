@@ -6,6 +6,24 @@ headers = [
 	"\x29\x9f\x17\xff\xff\xff\xff\xff\xff\xff\xff\xff\x04\x00\x00\x00\x00\x00\xb8\x40\x00\x10\x1e\x00\x00\x00\xd0\x00\x00\x00\xd0\x00\x32\x6e\x64\x46\x53\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xac\x1c\x9c\x9a\x9f\xff\xff\xa0\x08\x00\x00\x00\x22\x65\x89\x3b\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
 ]
 
+# I largely don't have any idea how or why this works.  It was basically just coding by trival and error.
+# I'm unsure of why they used this, versus something more standard
+def computeChecksum(data):
+	cksum = 0xffffffff
+
+	for i in range(0,len(data)):
+       		char = ord(data[i])
+
+        	pos = char << ((i%4)*8)
+
+        	cksum -= pos
+
+        	if cksum < 0:
+                	cksum &= 0xffffffff
+                	cksum -= 1
+
+	return cksum
+
 
 # indicates the image must be processed? at boot time
 IMAGE_ACTIVE = 0x01
@@ -70,3 +88,9 @@ for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",
 	print "Dumping 0x%s to 0x%s to %s.bin" % (imagestart, imageend, name)
 	with open('%s.bin' % name.replace("\x00",""),'w') as f:
 		f.write(ipmifw[imagestart:imageend])
+		computed = computeChecksum(ipmifw[imagestart:imageend])
+
+		if computed != image_checksum:
+			print "Warning: Image checksum didn't match, footer: 0x%x computed: 0x%x" % (image_checksum,computed)
+		else:
+			print "Checksum matches!"
