@@ -1,4 +1,4 @@
-import struct
+import struct, zlib
 
 class FirmwareFooter:
 	def __init__(self):
@@ -17,3 +17,11 @@ class FirmwareFooter:
 
 	def __str__(self):
 		return "Firmware footer version %i.%i checksum: 0x%x tag: 0x%x%x" % (self.rev1, self.rev2, self.checksum, self.fwtag1, self.fwtag2)
+
+	def computeFooterChecksum(self, imagecrc):
+		rawCRCBuf = ""
+		for cur in imagecrc:
+			rawCRCBuf += struct.pack("<I",cur)
+
+		return (zlib.crc32(rawCRCBuf) & 0xffffffff)
+

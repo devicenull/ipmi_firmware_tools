@@ -1,6 +1,6 @@
 #!/usr/local/bin/python2.7
 
-import re, hashlib, os, io, argparse, sys
+import re, hashlib, os, io, argparse, sys, zlib
 from ConfigParser import ConfigParser
 from ipmifw.FirmwareImage import FirmwareImage
 from ipmifw.FirmwareFooter import FirmwareFooter
@@ -13,6 +13,10 @@ args = cmdparser.parse_args()
 default_ini = """
 [flash]
 total_size=0
+
+[global]
+major_version=0
+minor_version=0
 
 [images]
 """
@@ -49,6 +53,7 @@ if args.extract:
 # Is the controller really doing this on bootup?  The way we're doing it is a horrible abuse of regular expressions!
 # We rely on the \xff(9) ... \x9f\xff\xff\xa0 ... \xff(16) signature to check.  Hopefully that doesn't occur otherwise :)
 
+imagecrc = []
 # Looking at some utils included in the SDK (SDK/PKConfig/MDInfo/mdinfo.c) it seems to read in every 64 bytes and only look at the
 # signature field.  Might need to switch to that if we have problems with this not finding images
 for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",ipmifw,re.DOTALL):
@@ -56,7 +61,6 @@ for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",
 
 	fi = FirmwareImage()
 	fi.loadFromString(footer)
-
 
 	print "\n"+str(fi)
 
@@ -66,6 +70,9 @@ for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",
 		imagestart -= 0x40000000
 
 	imageend = imagestart + fi.length
+
+	curcrc = zlib.crc32(ipmifw[imagestart:imageend]) & 0xffffffff
+	imagecrc.append(curcrc)
 
 	if args.extract:
 		print "Dumping 0x%s to 0x%s to data/%s.bin" % (imagestart, imageend, fi.name)
@@ -89,11 +96,21 @@ for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",
 	config.set(configkey, 'name', fi.name)
 	config.set(configkey, 'type', hex(fi.type))
 
+
 for imageFooter in re.findall("ATENs_FW(.{8})",ipmifw,re.DOTALL):
 	footer = FirmwareFooter()
 	footer.loadFromString(imageFooter)
+	computed_checksum = footer.computeFooterChecksum(imagecrc)
 
 	print "\n"+str(footer)
+
+	if footer.checksum == computed_checksum:
+		print "Firmware checksum matches"
+	else:
+		print "Firwamre checksum mismatch, footer: 0x%x computed: 0x%x" % (footer.checksum, computed_checksum)
+
+	config.set('global', 'major_version', footer.rev1)
+	config.set('global', 'minor_version', footer.rev2)
 
 
 
