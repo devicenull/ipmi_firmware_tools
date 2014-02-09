@@ -103,6 +103,7 @@ for imagenum in images:
 footer = FirmwareFooter()
 footer.rev1 = int(config.get('global','major_version'),0)
 footer.rev2 = int(config.get('global','minor_version'),0)
+footer.footerver = int(config.get('global','footer_version'),0)
 footer.checksum = footer.computeFooterChecksum(imagecrc)
 
 # Hmm... no documentation on where this should be, but in the firmware I have it's been palced right before the last image footer

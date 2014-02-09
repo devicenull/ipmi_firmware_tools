@@ -17,6 +17,7 @@ total_size=0
 [global]
 major_version=0
 minor_version=0
+footer_version=2
 
 [images]
 """
@@ -112,6 +113,7 @@ for imageFooter in re.findall("ATENs_FW(.{8})",ipmifw,re.DOTALL):
 
 	config.set('global', 'major_version', footer.rev1)
 	config.set('global', 'minor_version', footer.rev2)
+	config.set('global', 'footer_version', footer.footerver)
 
 
 
