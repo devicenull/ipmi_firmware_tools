@@ -34,6 +34,7 @@ Image footer
 
 The actual footer contents look like this:
 
+<pre>
 12 bytes - padding, value does not matter, though it's usually 0xFF
 4 bytes - image number, these are usually between 2 and 5.  Image number 0 is reserved for special things, and is never present
 4 bytes - base address, this determines where the image starts in the file.  I've noticed these are too big by 0x40000000, though I'm not sure why
@@ -44,22 +45,27 @@ The actual footer contents look like this:
 4 bytes - signature, this should be \xa0\xff\xff\x9f and is how you recongize an image
 4 bytes - type, bitmask controlling what the bootloader does with this image.  See FirmwareImage.IMAGE_*
 4 bytes - footer checksum, this is computed using all the preceeding fields (excluding the padding).  Same method as the image checksum
-
+</pre>
 
 File footer 1
 -------------
 This appears once in the file.  This particular format is used by the older firmware versions (seems to be anything before 3.00)
 
+<pre>
 ATENs_FW - string, this is how you find the footer
 1 byte - integer, firmware major version
 1 byte - integer, firmware minor version
+</pre>
 
 File footer 2
 -------------
 Again, this appears only once in the file.  This particular format is used by the newer firmware (> 3.00)
+
+<pre>
 ATENs_FW - string
 1 byte - integer, firmware major version
 1 byte - integer, firmware minor version
 0x71 - constant, helps you find the footer
 4 bytes - crc32 of all image blocks.  To find this, calculate the crc32 of each image data block.  Concatenate the raw values of all of them (in order by image number), and take the crc32 of that
 0x17 - constant, helps you find the footer
+</pre>
