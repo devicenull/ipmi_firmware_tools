@@ -1,8 +1,9 @@
 #!/usr/local/bin/python2.7
 
-import os, io, sys, math
+import os, io, sys, math, zlib
 from ConfigParser import ConfigParser
 from ipmifw.FirmwareImage import FirmwareImage
+from ipmifw.FirmwareFooter import FirmwareFooter
 
 config = ConfigParser()
 try:
@@ -29,6 +30,7 @@ for (imagenum, dummy) in config.items('images'):
 
 images.sort()
 
+imagecrc = []
 for imagenum in images:
 	print "Processing image %i"  % imagenum
 
@@ -61,6 +63,10 @@ for imagenum in images:
 	# Write the actual image contents
 	new_image.write(cur_image)	
 
+	# Compute the CRC32 of this image.  This is used for the global footer, not for each individual footer
+	curcrc = zlib.crc32(cur_image) & 0xffffffff
+	imagecrc.append(curcrc)
+
 	# Prepare the image footer based on the data we've stored previously
 	fi = FirmwareImage()
 	fi.imagenum = imagenum
@@ -80,8 +86,10 @@ for imagenum in images:
 
 	curblockend = curblock * 65536
 
+	last_image_end = new_image.tell()
+
 	# If we don't have space to write the footer at the end of the current block, move to the next block
-	if curblockend - 61 < new_image.tell():
+	if curblockend - 61 < last_image_end:
 		curblock += 1
 
 	footerpos = (curblock * 65536) - 61
@@ -90,3 +98,25 @@ for imagenum in images:
 
 	# And write the footer to the output file
 	new_image.write(fi.getRawString())
+
+
+footer = FirmwareFooter()
+footer.rev1 = int(config.get('global','major_version'),0)
+footer.rev2 = int(config.get('global','minor_version'),0)
+footer.checksum = footer.computeFooterChecksum(imagecrc)
+
+# Hmm... no documentation on where this should be, but in the firmware I have it's been palced right before the last image footer
+# Unsure if that's where it goes, or if it doesn't matter
+# 16 includes 8 padding \xFF's between the global footer and the last image footer
+global_start = footerpos-16
+if global_start < curblockend:
+	print "ERROR: Would have written global footer over last image"
+	print "Aborting"
+	sys.exit(1)
+
+# Write the global footer
+new_image.seek(global_start)
+new_image.write(footer.getRawString())
+
+print "Done!"
+
