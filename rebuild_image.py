@@ -66,6 +66,7 @@ for imagenum in images:
 	fi.imagenum = imagenum
 	fi.base_address = base_addr	
 	fi.exec_address = exec_addr
+	fi.load_address = load_addr
 	fi.name = name
 	fi.image_checksum = FirmwareImage.computeChecksum(cur_image)
 	fi.type = type
