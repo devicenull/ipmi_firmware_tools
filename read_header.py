@@ -49,18 +49,19 @@ if args.extract:
 	with open('data/bootloader.bin','w') as f:
 		f.write(bootloader)
 
-# I'm not terribly happy with this.  We're reading through a file, looking for the pattern that identifies a block of data.
-# Is the controller really doing this on bootup?  The way we're doing it is a horrible abuse of regular expressions!
-# We rely on the \xff(9) ... \x9f\xff\xff\xa0 ... \xff(16) signature to check.  Hopefully that doesn't occur otherwise :)
 
 imagecrc = []
-# Looking at some utils included in the SDK (SDK/PKConfig/MDInfo/mdinfo.c) it seems to read in every 64 bytes and only look at the
-# signature field.  Might need to switch to that if we have problems with this not finding images
-for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",ipmifw,re.DOTALL):
-	footer = "%s\x9f\xff\xff\xa0%s" % (part1, part2)
+# This method comes directly from the SDK.  Read through the file in 64 byte chunks, and look for the signature at a certain point in the string
+# Seems kinda scary, as there might be other parts of the file that include this.
+for i in range(0,len(ipmifw),64):
+	footer = ipmifw[i:i+64]
 
 	fi = FirmwareImage()
-	fi.loadFromString(footer)
+	# 12 bytes of padding.  I think this can really be anything, though it's usually \xFF
+	fi.loadFromString(footer[12:])
+
+	if not fi.isValid():
+		continue
 
 	print "\n"+str(fi)
 

@@ -16,6 +16,9 @@ class FirmwareImage:
 	# This data comes from the "W90P710 Bootloader Users Manual" (find it yourself, I'm not allowed to distribute it)
 	footer_format = "<5I16s4I"
 
+	# This signature should be valid if this is a valid firmware image
+	correct_signature = struct.unpack('<I',"\x9f\xff\xff\xa0")[0]
+
         # I largely don't have any idea how or why this works.  It was basically just coding by trival and error.
         # I'm unsure of why they used this, versus something more standard
         @staticmethod
@@ -52,6 +55,9 @@ class FirmwareImage:
 	def getRawString(self):
 		contents = struct.pack("<5I16s4I",self.imagenum, self.base_address, self.length, self.load_address, self.exec_address, self.name, self.image_checksum, self.signature, self.type, self.footer_checksum)
 		return "\xff\xff\xff\xff\xff\xff\xff\xff\xff"+contents+"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
+
+	def isValid(self):
+		return self.signature == FirmwareImage.correct_signature
 
 	# The footer checksum is only the 48 bytes of actual data (excludes the \xff padding, and the checksum itself)
 	def computeFooterChecksum(self):
