@@ -41,13 +41,17 @@ class FirmwareImage:
 		self.exec_address = 0
 		self.name = 0
 		self.image_checksum = 0
-		self.signature = 0
+		self.signature = struct.unpack('<I',"\x9f\xff\xff\xa0")[0]
 		self.type = 0
 		self.footer_checksum = 0
 		
 	def loadFromString(self,footer): 
 		(self.imagenum, self.base_address, self.length, self.load_address, self.exec_address, self.name, self.image_checksum, self.signature, self.type, self.footer_checksum) = struct.unpack(FirmwareImage.footer_format,footer)
 		self.name = self.name.replace("\x00","")
+
+	def getRawString(self):
+		contents = struct.pack("<5I16s4I",self.imagenum, self.base_address, self.length, self.load_address, self.exec_address, self.name, self.image_checksum, self.signature, self.type, self.footer_checksum)
+		return "\xff\xff\xff\xff\xff\xff\xff\xff\xff"+contents+"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
 
 	# The footer checksum is only the 48 bytes of actual data (excludes the \xff padding, and the checksum itself)
 	def computeFooterChecksum(self):
