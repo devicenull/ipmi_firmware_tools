@@ -1,6 +1,6 @@
 #!/usr/local/bin/python2.7
 
-import os, io, sys
+import os, io, sys, math
 from ConfigParser import ConfigParser
 from ipmifw.FirmwareImage import FirmwareImage
 
@@ -73,6 +73,19 @@ for imagenum in images:
 
 	# Calculate the new checksum..
 	fi.footer_checksum = fi.computeFooterChecksum()
+
+	# flash chip breaks data down into 64KB blocks.  Footer should be at the end of one of these
+	curblock = int(math.floor(new_image.tell() / 65536))
+
+	curblockend = curblock * 65536
+
+	# If we don't have space to write the footer at the end of the current block, move to the next block
+	if curblockend - 61 < new_image.tell():
+		curblock += 1
+
+	footerpos = (curblock * 65536) - 61
+
+	new_image.seek(footerpos)
 
 	# And write the footer to the output file
 	new_image.write(fi.getRawString())
