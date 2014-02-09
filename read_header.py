@@ -3,6 +3,7 @@
 import re, hashlib, os, io, argparse, sys
 from ConfigParser import ConfigParser
 from ipmifw.FirmwareImage import FirmwareImage
+from ipmifw.FirmwareFooter import FirmwareFooter
 
 cmdparser = argparse.ArgumentParser(description='Read and extract data from SuperMicro IPMI firmware')
 cmdparser.add_argument('--extract',action='store_true',help='Extract any detected firmware images')
@@ -47,6 +48,9 @@ if args.extract:
 # I'm not terribly happy with this.  We're reading through a file, looking for the pattern that identifies a block of data.
 # Is the controller really doing this on bootup?  The way we're doing it is a horrible abuse of regular expressions!
 # We rely on the \xff(9) ... \x9f\xff\xff\xa0 ... \xff(16) signature to check.  Hopefully that doesn't occur otherwise :)
+
+# Looking at some utils included in the SDK (SDK/PKConfig/MDInfo/mdinfo.c) it seems to read in every 64 bytes and only look at the
+# signature field.  Might need to switch to that if we have problems with this not finding images
 for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",ipmifw,re.DOTALL):
 	footer = "%s\x9f\xff\xff\xa0%s" % (part1, part2)
 
@@ -84,6 +88,14 @@ for (part1, part2) in re.findall("\xff{9}(.{40})\x9f\xff\xff\xa0(.{8})\xff{16}",
 	config.set(configkey, 'exec_addr', hex(fi.exec_address))
 	config.set(configkey, 'name', fi.name)
 	config.set(configkey, 'type', hex(fi.type))
+
+for imageFooter in re.findall("ATENs_FW(.{8})",ipmifw,re.DOTALL):
+	footer = FirmwareFooter()
+	footer.loadFromString(imageFooter)
+
+	print "\n"+str(footer)
+
+
 
 if args.extract:
 	with open('data/image.ini','w') as f:
