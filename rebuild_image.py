@@ -119,5 +119,5 @@ if global_start < curblockend:
 new_image.seek(global_start)
 new_image.write(footer.getRawString())
 
-print "Done!"
+print "Done, new firmware written to data/rebuild_image.bin"
 
