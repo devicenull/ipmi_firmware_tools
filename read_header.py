@@ -1,4 +1,4 @@
-#!/usr/local/bin/python2.7
+#!/usr/bin/python
 
 import re, hashlib, os, io, argparse, sys, zlib
 from ConfigParser import ConfigParser
@@ -70,6 +70,7 @@ if fwtype == 'winbond':
 elif fwtype == 'aspeed':
 	from ipmifw.ASpeed import ASpeed
 
+	config.set('global', 'footer_version', 3)
 	firmware = ASpeed(ipmifw)
 	firmware.parse(args.extract, config)
 

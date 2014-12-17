@@ -33,31 +33,34 @@ class ASpeed:
 				else:
 					print "Image checksum matches"
 
-
-                        config.set('images', str(imagenum), 'present')
-                        configkey = 'image_%i' % imagenum
-                        config.add_section(configkey)
-                        config.set(configkey, 'name', filename)
-                        config.set(configkey, 'base_addr', hex(imagestart))
-                        config.set(configkey, 'length', hex(length))
+			config.set('images', str(imagenum), 'present')
+			configkey = 'image_%i' % imagenum
+			config.add_section(configkey)
+			config.set(configkey, 'name', filename)
+			config.set(configkey, 'base_addr', hex(imagestart))
+			config.set(configkey, 'length', hex(length))
 			config.set(configkey, 'checksum', hex(checksum))
-
 
 			imagenum += 1
 
 		# Next, find and validate the global footer
 		for imageFooter in re.findall("ATENs_FW(.{20})",self.ipmifw,re.DOTALL):
 
-			(rev1, rev2, unknown) = struct.unpack("<bb18s", imageFooter)
-			print "footer: %x.%x unknown: %s" % (rev1, rev2, unknown)
-			#print "\n"+str(footer)
-
-			#if footer.checksum == computed_checksum:
-			#	print "Firmware checksum matches"
-			#else:
-			#	print "Firwamre checksum mismatch, footer: 0x%x computed: 0x%x" % (footer.checksum, computed_checksum)
+			(rev1, rev2, rootfs_crc, rootfs_len, fwtag1, webfs_crc, webfs_len, fwtag2) = struct.unpack("<bb4s4sb4s4sb", imageFooter)
+			if fwtag1 != 0x71 or fwtag2 != 0x17:
+				print "Error matching footer tags"
+			else:
+				len2 = config.get('image_2', 'length')
+				crc2 = config.get('image_2', 'checksum')
+				len4 = config.get('image_4', 'length')
+				crc4 = config.get('image_4', 'checksum')
+				if rootfs_len != len2[2:6] or rootfs_crc != crc2[2:6]:
+					print "Root_fs image info does not match"
+				elif webfs_len != len4[2:6] or webfs_crc != crc4[2:6]:
+					print "Web_fs image info does not match"
+				else:
+					print "Footer OK, rev: %x.%x" % (rev1, rev2)
 
 			config.set('global', 'major_version', rev1)
 			config.set('global', 'minor_version', rev2)
-			#config.set('global', 'footer_version', footer.footerver)
 
