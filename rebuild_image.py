@@ -81,8 +81,10 @@ for imagenum in images:
 	new_image.seek(imagestart)
 
 	if name[-4:] != '.bin':
-		name = name + '.bin'
-	with open('data/%s' % name,'r') as img:
+		fname = name + '.bin'
+	else:
+		fname = name
+	with open('data/%s' % fname,'r') as img:
 		cur_image = img.read()
 
 	# Write the actual image contents

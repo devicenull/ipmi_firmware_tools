@@ -25,9 +25,10 @@ class FirmwareFooter:
 		self.footerver = 3
 
 	def loadFromString(self, footer):
-		(self.rev1, self.rev2, self.rootfs_nfo, self.fwtag1, self.webfs_nfo, self.fwtag2) = struct.unpack("<bb8sb8sb", footer)
+		if len(footer) >= 20:
+			(self.rev1, self.rev2, self.rootfs_nfo, self.fwtag1, self.webfs_nfo, self.fwtag2) = struct.unpack("<bb8sb8sb", footer)
 		# Older footer versions have tags at different offset
-		if self.fwtag1 != 0x71 or self.fwtag2 != 0x17:
+		if len(footer) < 20 or self.fwtag1 != 0x71 or self.fwtag2 != 0x17:
 			self.footerver = 2
 			(self.rev1, self.rev2, self.fwtag1, self.checksum, self.fwtag2) = struct.unpack("<bbbIb", footer)
 			# Seems firmware older then v3.00 uses a different footer, which doesn't have the tag
