@@ -42,11 +42,15 @@ Not working:
 * <a href="http://www.supermicro.com/products/motherboard/xeon/c220/x10sld-hf.cfm">X10SLD-HF</a> (ASpeed) (SMT_X10_109.bin)
 * <a href="http://www.supermicro.com/products/motherboard/Xeon3000/X58/X8ST3-F.cfm">X8ST3-F</a> (WPCM450) (X8ST3_204.ima) - This is based on U-Boot 1.1.4
 
-Winbond Bootloader
+Winbond bootloader
 ------------------
 
-0x0 - 0xfa40 - This is the standard WinBond bootloader, aka "WPCM450 Boot Loader [ Version:1.0.14 ]".  This is shared between virtually all X8 and X9 the firmware
-ASpeed firmware have uBoot bootloader referenced in the image footer, as any other part
+0x0 - 0xfa40 - This is the standard WinBond bootloader, aka "WPCM450 Boot Loader [ Version:1.0.14 ]".  This is shared between virtually all X8 and X9 the firmware.
+
+ASpeed nvram
+------------
+
+ASpeed firmware does not have bootloader specific part, it has uBoot bootloader referenced in the image footer. On the other hand, it has a part of image starting at offset 0x00100000 and 0x00300000 bytes long, which is described as nvram in the X10 SDK files. In all examined X10 firmwares, this part was always filled with zeroes.
 
 Image footer Winbond
 --------------------
