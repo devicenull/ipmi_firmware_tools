@@ -64,15 +64,15 @@ config.set('global', 'type', fwtype)
 if fwtype == 'winbond':
 	from ipmifw.Winbond import Winbond
 
-	firmware = Winbond(ipmifw)
-	firmware.parse(args.extract, config)
+	firmware = Winbond()
+	firmware.parse(ipmifw, args.extract, config)
 
 elif fwtype == 'aspeed':
 	from ipmifw.ASpeed import ASpeed
 
 	config.set('global', 'footer_version', 3)
-	firmware = ASpeed(ipmifw)
-	firmware.parse(args.extract, config)
+	firmware = ASpeed()
+	firmware.parse(ipmifw, args.extract, config)
 
 else:
 	print "Error: Unable to determine what type of IPMI firmware this is!"
