@@ -82,6 +82,22 @@ class ASpeed:
         def write_bootloader(self, new_image):
 		pass
 
+	def process_image(self, config, imagenum, images, cur_image):
+		# ASpeed seems to place global footer right after the last image
+		# The size contains also part of the footer, so we extract it
+		# But if the image is re-packed, that part is lost
+		# so we need to check and add it, if needed
+		if imagenum == images[-1]:
+			if cur_image[-10:-2] != 'ATENs_FW':
+				footer = FirmwareFooter()
+				footer.rev1 = int(config.get('global','major_version'),0)
+				footer.rev2 = int(config.get('global','minor_version'),0)
+				footer.footerver = int(config.get('global','footer_version'),0)
+				footer.rootfs_nfo = "00000000"
+				footer.webfs_nfo = "00000000"
+				return cur_image + footer.getRawString()[:10]
+		return cur_image
+
 	def write_image_footer(self, new_image, cur_image, config, configkey, imagenum, base_addr, name):
 		# no image footer for ASpeed, but check for changes
 		curcrc = int(config.get(configkey, 'curcrc'), 0)

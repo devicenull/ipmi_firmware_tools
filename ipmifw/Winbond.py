@@ -91,6 +91,9 @@ class Winbond:
 		with open('data/bootloader.bin','r') as f:
 			new_image.write(f.read())
 
+	def process_image(self, config, imagenum, images, cur_image):
+		return cur_image
+
 	def write_image_footer(self, new_image, cur_image, config, configkey, imagenum, base_addr, name):
                 load_addr = int(config.get(configkey, 'load_addr'),0)
                 exec_addr = int(config.get(configkey, 'exec_addr'),0)

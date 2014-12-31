@@ -66,7 +66,7 @@ for imagenum in images:
 	else:
 		fname = name
 	with open('data/%s' % fname,'r') as img:
-		cur_image = img.read()
+		cur_image = firmware.process_image(config, imagenum, images, img.read())
 
 	# Write the actual image contents
 	new_image.write(cur_image)	
