@@ -1,0 +1,26 @@
+#!/bin/bash
+
+#
+# Script for regression testing
+# Place all firmwares to test in FW folder
+# Script will extract and reassemble all images and check for differences
+#
+# Author: Tomas Kopal (Tomas.Kopal@altap.cz)
+# Licence: public domain
+#
+
+ORIG_FW=FW/*.bin
+
+for f in $ORIG_FW
+do
+	echo "Processing $f..."
+	rm data/*
+	python ./read_header.py --extract $f
+	python ./rebuild_image.py
+	diff $f data/rebuilt_image.bin
+	if [ $? -ne 0 ]; then
+		echo "ERROR, output file differs from the input image"
+		exit 1
+	fi
+done
+
