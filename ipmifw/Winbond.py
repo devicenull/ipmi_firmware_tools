@@ -13,7 +13,7 @@ class Winbond:
 
 		if extract:
 			print "Dumping bootloader to data/bootloader.bin"
-			with open('data/bootloader.bin','w') as f:
+			with open('data/bootloader.bin','wb') as f:
 				f.write(bootloader)
 
 
@@ -45,7 +45,7 @@ class Winbond:
 
 			if extract:
 				print "Dumping 0x%s to 0x%s to data/%s.bin" % (imagestart, imageend, fi.name)
-				with open('data/%s.bin' % fi.name.replace("\x00",""),'w') as f:
+				with open('data/%s.bin' % fi.name.replace("\x00",""),'wb') as f:
 					f.write(ipmifw[imagestart:imageend])
 				computed_image_checksum = FirmwareImage.computeChecksum(ipmifw[imagestart:imageend])
 
@@ -88,7 +88,7 @@ class Winbond:
 
 	def write_bootloader(self, new_image):
 		print "Writing bootloader..."
-		with open('data/bootloader.bin','r') as f:
+		with open('data/bootloader.bin','rb') as f:
 			new_image.write(f.read())
 
 	def process_image(self, config, imagenum, images, cur_image):

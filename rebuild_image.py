@@ -19,7 +19,7 @@ else:
 	from ipmifw.Winbond import Winbond
 	firmware = Winbond()
 
-new_image = open('data/rebuilt_image.bin','w')
+new_image = open('data/rebuilt_image.bin','wb')
 new_image.truncate()
 
 # initialize new image
@@ -65,7 +65,7 @@ for imagenum in images:
 		fname = name + '.bin'
 	else:
 		fname = name
-	with open('data/%s' % fname,'r') as img:
+	with open('data/%s' % fname,'rb') as img:
 		cur_image = firmware.process_image(config, imagenum, images, img.read())
 
 	# Write the actual image contents

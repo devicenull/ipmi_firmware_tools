@@ -21,7 +21,7 @@ class ASpeed:
 			if extract:
 				imageend = imagestart + length
 				print "Dumping 0x%x to 0x%X to data/%s" % (imagestart, imageend, filename)
-				with open('data/%s' % filename,'w') as f:
+				with open('data/%s' % filename,'wb') as f:
 					f.write(ipmifw[imagestart:imageend])
 
 				computed_image_checksum = zlib.crc32(ipmifw[imagestart:imageend]) & 0xffffffff

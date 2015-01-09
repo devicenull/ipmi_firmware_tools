@@ -26,7 +26,7 @@ type=unknown
 config = ConfigParser()
 config.readfp(io.BytesIO(default_ini))
 
-with open(args.filename,'r') as f:
+with open(args.filename,'rb') as f:
 	ipmifw = f.read()
 
 config.set('flash', 'total_size', len(ipmifw))
@@ -56,7 +56,7 @@ if fwtype == 'unknown':
 
 	if args.extract:
 		print "Dumping bootloader to data/bootloader.bin"
-		with open('data/bootloader.bin','w') as f:
+		with open('data/bootloader.bin','wb') as f:
 			f.write(bootloader)
 
 config.set('global', 'type', fwtype)
