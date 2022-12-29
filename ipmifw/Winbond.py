@@ -11,16 +11,18 @@ class Winbond:
         bootloader_md5 = hashlib.md5(bootloader).hexdigest()
 
         if extract:
-            print("Dumping bootloader as %#x to %#x to data/bootloader.bin" % (0, 64040))
-            with open('data/bootloader.bin','wb') as f:
+            print(
+                "Dumping bootloader as %#x to %#x to data/bootloader.bin" % (0, 64040)
+            )
+            with open("data/bootloader.bin", "wb") as f:
                 f.write(bootloader)
 
         imagecrc = []
         # Start by parsing all the different images within the firmware
         # This method comes directly from the SDK.  Read through the file in 64 byte chunks, and look for the signature at a certain point in the string
         # Seems kinda scary, as there might be other parts of the file that include this.
-        for i in range(0,len(ipmifw),64):
-            footer = ipmifw[i:i+64]
+        for i in range(0, len(ipmifw), 64):
+            footer = ipmifw[i : i + 64]
 
             fi = FirmwareImage()
             # 12 bytes of padding.  I think this can really be anything, though it's usually \xFF
@@ -29,7 +31,7 @@ class Winbond:
             if not fi.isValid():
                 continue
 
-            print("\n"+str(fi))
+            print("\n" + str(fi))
 
             imagestart = fi.base_address
             if imagestart > 0x40000000:
@@ -38,65 +40,77 @@ class Winbond:
 
             imageend = imagestart + fi.length
 
-            curcrc = zlib.crc32(ipmifw[imagestart:imageend]) & 0xffffffff
+            curcrc = zlib.crc32(ipmifw[imagestart:imageend]) & 0xFFFFFFFF
             imagecrc.append(curcrc)
 
             if extract:
-                print("Dumping %#x (%s) to %#x (%s) to data/%s.bin" % (imagestart, imagestart, imageend, imageend, fi.name))
-                with open('data/%s.bin' % fi.name,'wb') as f:
+                print(
+                    "Dumping %#x (%s) to %#x (%s) to data/%s.bin"
+                    % (imagestart, imagestart, imageend, imageend, fi.name)
+                )
+                with open("data/%s.bin" % fi.name, "wb") as f:
                     f.write(ipmifw[imagestart:imageend])
-                computed_image_checksum = FirmwareImage.computeChecksum(ipmifw[imagestart:imageend])
+                computed_image_checksum = FirmwareImage.computeChecksum(
+                    ipmifw[imagestart:imageend]
+                )
 
                 if computed_image_checksum != fi.image_checksum:
-                    print("Warning: Image checksum mismatch, footer: 0x%x computed: 0x%x" % (fi.image_checksum,computed_image_checksum))
+                    print(
+                        "Warning: Image checksum mismatch, footer: 0x%x computed: 0x%x"
+                        % (fi.image_checksum, computed_image_checksum)
+                    )
                 else:
                     print("Image checksum matches")
 
-
-            config.set('images', str(fi.imagenum), 'present')
-            configkey = 'image_%i' % fi.imagenum
+            config.set("images", str(fi.imagenum), "present")
+            configkey = "image_%i" % fi.imagenum
             config.add_section(configkey)
-            config.set(configkey, 'length', hex(fi.length))
-            config.set(configkey, 'base_addr', hex(fi.base_address))
-            config.set(configkey, 'load_addr', hex(fi.load_address))
-            config.set(configkey, 'exec_addr', hex(fi.exec_address))
-            config.set(configkey, 'name', fi.name)
-            config.set(configkey, 'type', hex(fi.type))
+            config.set(configkey, "length", hex(fi.length))
+            config.set(configkey, "base_addr", hex(fi.base_address))
+            config.set(configkey, "load_addr", hex(fi.load_address))
+            config.set(configkey, "exec_addr", hex(fi.exec_address))
+            config.set(configkey, "name", fi.name)
+            config.set(configkey, "type", hex(fi.type))
 
         # Next, find and validate the global footer
-        for imageFooter in re.findall(b"ATENs_FW(.{8})",ipmifw,re.DOTALL):
+        for imageFooter in re.findall(b"ATENs_FW(.{8})", ipmifw, re.DOTALL):
             footer = FirmwareFooter()
             footer.loadFromString(imageFooter)
             computed_checksum = footer.computeFooterChecksum(imagecrc)
 
-            print("\n"+str(footer))
+            print("\n" + str(footer))
 
             if footer.checksum == computed_checksum:
                 print("Firmware checksum matches")
             else:
-                print("Firwamre checksum mismatch, footer: 0x%x computed: 0x%x" % (footer.checksum, computed_checksum))
+                print(
+                    "Firwamre checksum mismatch, footer: 0x%x computed: 0x%x"
+                    % (footer.checksum, computed_checksum)
+                )
 
-            config.set('global', 'major_version', str(footer.rev1))
-            config.set('global', 'minor_version', str(footer.rev2))
-            config.set('global', 'footer_version', str(footer.footerver))
+            config.set("global", "major_version", str(footer.rev1))
+            config.set("global", "minor_version", str(footer.rev2))
+            config.set("global", "footer_version", str(footer.footerver))
 
     def init_image(self, new_image, total_size):
         print("Initializing image %s with %i bytes" % (new_image.name, total_size))
-        for i in range(0,total_size):
-            new_image.write(b'\xFF')
+        for i in range(0, total_size):
+            new_image.write(b"\xFF")
 
     def write_bootloader(self, new_image):
         print("Writing bootloader...")
-        with open('data/bootloader.bin','rb') as f:
+        with open("data/bootloader.bin", "rb") as f:
             new_image.write(f.read())
 
     def process_image(self, config, imagenum, images, cur_image):
         return cur_image
 
-    def write_image_footer(self, new_image, cur_image, config, configkey, imagenum, base_addr, name):
-        load_addr = int(config.get(configkey, 'load_addr'),0)
-        exec_addr = int(config.get(configkey, 'exec_addr'),0)
-        type = int(config.get(configkey, 'type'),0)
+    def write_image_footer(
+        self, new_image, cur_image, config, configkey, imagenum, base_addr, name
+    ):
+        load_addr = int(config.get(configkey, "load_addr"), 0)
+        exec_addr = int(config.get(configkey, "exec_addr"), 0)
+        type = int(config.get(configkey, "type"), 0)
 
         # Prepare the image footer based on the data
         # we've stored previously
@@ -142,7 +156,7 @@ class Winbond:
         # Unsure if that's where it goes, or if it doesn't matter
         # 16 includes 8 padding \xFF's between the global footer
         # and the last image footer
-        global_start = footerpos-16
+        global_start = footerpos - 16
         if global_start < curblockend:
             print("ERROR: Would have written global footer over last image")
             print("Aborting")
@@ -152,4 +166,3 @@ class Winbond:
 
     def write_global_index(self, config, new_image, images):
         pass
-
