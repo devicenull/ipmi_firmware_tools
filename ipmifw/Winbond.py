@@ -11,7 +11,7 @@ class Winbond:
         bootloader_md5 = hashlib.md5(bootloader).hexdigest()
 
         if extract:
-            print("Dumping bootloader to data/bootloader.bin")
+            print("Dumping bootloader as %#x to %#x to data/bootloader.bin" % (0, 64040))
             with open('data/bootloader.bin','wb') as f:
                 f.write(bootloader)
 
@@ -42,7 +42,7 @@ class Winbond:
             imagecrc.append(curcrc)
 
             if extract:
-                print("Dumping 0x%s to 0x%s to data/%s.bin" % (imagestart, imageend, fi.name))
+                print("Dumping %#x (%s) to %#x (%s) to data/%s.bin" % (imagestart, imagestart, imageend, imageend, fi.name))
                 with open('data/%s.bin' % fi.name,'wb') as f:
                     f.write(ipmifw[imagestart:imageend])
                 computed_image_checksum = FirmwareImage.computeChecksum(ipmifw[imagestart:imageend])
@@ -81,6 +81,7 @@ class Winbond:
             config.set('global', 'footer_version', str(footer.footerver))
 
     def init_image(self, new_image, total_size):
+        print("Initializing image %s with %i bytes" % (new_image.name, total_size))
         for i in range(0,total_size):
             new_image.write(b'\xFF')
 
