@@ -59,7 +59,7 @@ class FirmwareImage:
 
     def getRawString(self):
         contents = struct.pack(b"<5I16s4I", self.imagenum, self.base_address, self.length, self.load_address, self.exec_address, self.name.encode('ISO-8859-1'), self.image_checksum, self.signature, self.type, self.footer_checksum)
-        return b"\xff\xff\xff\xff\xff\xff\xff\xff\xff"+contents+b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
+        return b"\xff\xff\xff\xff\xff\xff\xff\xff\xff" + contents
 
     def isValid(self):
         return self.signature == FirmwareImage.correct_signature
