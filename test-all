@@ -11,6 +11,9 @@
 
 ORIG_FW=FW/*.bin
 
+py_ver=`python --version 2>&1`
+echo "Using $py_ver"
+
 for f in $ORIG_FW
 do
 	echo "Processing $f..."
