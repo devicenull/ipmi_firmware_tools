@@ -67,6 +67,8 @@ class FirmwareImage:
             self.type,
             self.footer_checksum,
         ) = struct.unpack(FirmwareImage.footer_format, footer)
+        # Preserve the raw name for correct reassembly
+        self.name_raw = self.name
         self.name = self.name.replace(b"\x00", b"").decode("ISO-8859-1")
 
     def getRawString(self):
