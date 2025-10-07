@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import re, hashlib, os, io, argparse, sys, math, zlib
+import base64, re, hashlib, os, io, argparse, sys, math, zlib
 from ipmifw.FirmwareImage import FirmwareImage
 from ipmifw.FirmwareFooter import FirmwareFooter
 
@@ -70,6 +70,11 @@ class Winbond:
             config.set(configkey, "load_addr", hex(fi.load_address))
             config.set(configkey, "exec_addr", hex(fi.exec_address))
             config.set(configkey, "name", fi.name)
+            config.set(
+                configkey,
+                "name_raw",
+                base64.b64encode(fi.name_raw).decode("ISO-8859-1"),
+            )
             config.set(configkey, "type", hex(fi.type))
 
         # Next, find and validate the global footer
@@ -95,7 +100,7 @@ class Winbond:
     def init_image(self, new_image, total_size):
         print("Initializing image %s with %i bytes" % (new_image.name, total_size))
         for i in range(0, total_size):
-            new_image.write(b"\xFF")
+            new_image.write(b"\xff")
 
     def write_bootloader(self, new_image):
         print("Writing bootloader...")

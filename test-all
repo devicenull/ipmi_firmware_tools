@@ -16,6 +16,7 @@ echo "Using $py_ver"
 
 for f in $ORIG_FW
 do
+	echo "###############################"
 	echo "Processing $f..."
 	rm data/*
 	python ./read_header.py --extract $f
@@ -25,5 +26,6 @@ do
 		echo "ERROR, output file differs from the input image"
 		exit 1
 	fi
+	echo
 done
 

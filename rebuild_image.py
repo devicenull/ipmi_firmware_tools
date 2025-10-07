@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os, io, sys, zlib
+import base64, os, io, sys, zlib
 from configparser import ConfigParser
 from ipmifw.FirmwareImage import FirmwareImage
 from ipmifw.FirmwareFooter import FirmwareFooter
@@ -34,7 +34,7 @@ firmware.write_bootloader(new_image)
 
 # prepare list of images to write
 images = []
-for (imagenum, dummy) in config.items("images"):
+for imagenum, dummy in config.items("images"):
     images.append(int(imagenum))
 
 images.sort()
@@ -47,6 +47,13 @@ for imagenum in images:
     # can't use getint, it doesn't support hex
     base_addr = int(config.get(configkey, "base_addr"), 0)
     name = config.get(configkey, "name")
+    try:
+        name_raw = base64.b64decode(
+            config.get(section=configkey, option="name_raw")
+        ).decode("ISO-8859-1")
+    except Exception as e:
+        print(e)
+        name_raw = None
 
     imagestart = base_addr
     if imagestart > 0x40000000:
@@ -65,7 +72,7 @@ for imagenum in images:
     # Seek to where this image will start
     new_image.seek(imagestart)
 
-    if name[-4:] != ".bin":
+    if not name.endswith(".bin"):
         fname = name + ".bin"
     else:
         fname = name
@@ -83,7 +90,13 @@ for imagenum in images:
     config.set(configkey, "curlen", "0x%x" % len(cur_image))
 
     (footerpos, curblockend) = firmware.write_image_footer(
-        new_image, cur_image, config, configkey, imagenum, base_addr, name
+        new_image,
+        cur_image,
+        config,
+        configkey,
+        imagenum,
+        base_addr,
+        name_raw if name_raw else name,
     )
 
 footer = FirmwareFooter()

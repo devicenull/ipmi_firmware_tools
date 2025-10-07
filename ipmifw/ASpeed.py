@@ -9,7 +9,7 @@ class ASpeed:
         footer = ipmifw[0x01FC0000:].decode("ISO-8859-1")
         imagenum = 1
         # There's a nice handy block at the end of the file that gives information about all the embedded images!
-        for (imagestart, length, checksum, filename) in re.findall(
+        for imagestart, length, checksum, filename in re.findall(
             "\[img\]: ([0-9a-z]+) ([0-9a-z]+) ([0-9a-z]+) ([0-9a-z\-_.]+)", footer
         ):
             imagestart = int(imagestart, 16)
@@ -93,13 +93,13 @@ class ASpeed:
             os.exit(1)
         # space for uboot bootloader
         for i in range(0, 0x100000):
-            new_image.write(b"\xFF")
+            new_image.write(b"\xff")
         # nvram block, not referenced in the footer
         for i in range(0x100000, 0x400000):
             new_image.write(b"\x00")
         # root_fs, kernel and web_fs
         for i in range(0x400000, 0x1F40000):
-            new_image.write(b"\xFF")
+            new_image.write(b"\xff")
         # bootloader env aka footer
         for i in range(0x1F40000, total_size):
             new_image.write(b"\x00")
